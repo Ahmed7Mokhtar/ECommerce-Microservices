@@ -16,9 +16,13 @@ namespace ProductsService.DataAccessLayer
     {
         public static IServiceCollection AddDataAccessLayer(this IServiceCollection services, IConfiguration config)
         {
+            string connectionStringTemplate = config.GetConnectionString("MySqlConnection")!;
+            var connectionString = connectionStringTemplate
+                .Replace("$MYSQL_HOST", Environment.GetEnvironmentVariable("MYSQL_HOST"))
+                .Replace("$MYSQL_PASSWORD", Environment.GetEnvironmentVariable("MYSQL_PASSWORD"));
             services.AddDbContext<AppDbContext>(opts =>
             {
-                opts.UseMySQL(config.GetConnectionString("MySqlConnection")!);
+                opts.UseMySQL(connectionString);
             });
 
             services.AddScoped<IProductsRepository, ProductsRepository>();
