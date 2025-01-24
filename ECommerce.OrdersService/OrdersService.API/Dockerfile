@@ -4,29 +4,29 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER $APP_UID
 WORKDIR /app
-EXPOSE 9090
-EXPOSE 9091
+EXPOSE 8080
+EXPOSE 8081
 
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["ECommerce.API/ECommerce.API.csproj", "ECommerce.API/"]
-RUN dotnet restore "./ECommerce.API/ECommerce.API.csproj"
+COPY ["OrdersService.API/OrdersService.API.csproj", "OrdersService.API/"]
+RUN dotnet restore "./OrdersService.API/OrdersService.API.csproj"
 COPY . .
-WORKDIR "/src/ECommerce.API"
-RUN dotnet build "./ECommerce.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/OrdersService.API"
+RUN dotnet build "./OrdersService.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./ECommerce.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./OrdersService.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENV POSTGRES_HOST=localhost
-ENV POSTGRES_PASSWORD=sa123
-ENTRYPOINT ["dotnet", "ECommerce.API.dll"]
+ENV MONGODB_HOST=localhost
+ENV MONGODB_PORT=27017
+ENTRYPOINT ["dotnet", "OrdersService.API.dll"]
