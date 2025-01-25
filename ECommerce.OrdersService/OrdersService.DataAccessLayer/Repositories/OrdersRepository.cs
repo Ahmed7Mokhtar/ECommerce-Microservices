@@ -59,6 +59,7 @@ namespace OrdersService.BusinessLogicLayer.Repositories
 
             return order;
         }
+
         public async Task<bool> Delete(Guid id)
         {
             FilterDefinition<Order> filter = Builders<Order>.Filter.Eq(order =>  order.OrderId, id);

@@ -8,3 +8,7 @@ CREATE TABLE public."Users"
     "Gender" smallint NOT NULL,
     CONSTRAINT "Users_pkey" PRIMARY KEY ("Id")
 );
+
+
+INSERT INTO public."Users"("Id", "Name", "Email", "Password", "Gender")
+VALUES('c32f8b42-60e6-4c02-90a7-9143ab37189f', 'Rooney', 'rooney@test.com', '123456', 1);

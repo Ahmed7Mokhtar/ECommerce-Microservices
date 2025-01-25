@@ -4,10 +4,16 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "POSTGRES_HOST": "localhost",
+        "POSTGRES_PASSWORD": "sa123",
+        "POSTGRES_DATABASE": "eCommerceUsers",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PORT": "5432"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "http://localhost:5067"
+      "applicationUrl": "http://localhost:5067",
+      "launchUrl": "swagger"
     },
     "https": {
       "commandName": "Project",
@@ -15,10 +21,14 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "POSTGRES_HOST": "localhost",
-        "POSTGRES_PASSWORD": "sa123"
+        "POSTGRES_PASSWORD": "sa123",
+        "POSTGRES_DATABASE": "eCommerceUsers",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PORT": "5432"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "https://localhost:7015;http://localhost:5067"
+      "applicationUrl": "https://localhost:7015;http://localhost:5067",
+      "launchUrl": "swagger"
     },
     "IIS Express": {
       "commandName": "IISExpress",
@@ -33,7 +43,12 @@
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
       "environmentVariables": {
         "ASPNETCORE_HTTPS_PORTS": "8081",
-        "ASPNETCORE_HTTP_PORTS": "8080"
+        "ASPNETCORE_HTTP_PORTS": "8080",
+        "POSTGRES_HOST": "localhost",
+        "POSTGRES_PASSWORD": "sa123",
+        "POSTGRES_DATABASE": "eCommerceUsers",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PORT": "5432"
       },
       "publishAllPorts": true,
       "useSSL": true

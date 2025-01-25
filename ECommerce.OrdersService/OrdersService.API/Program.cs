@@ -2,6 +2,7 @@ using OrdersService.DataAccessLayer;
 using OrdersService.BusinessLogicLayer;
 using FluentValidation.AspNetCore;
 using OrdersService.API.Middlewares;
+using OrdersService.API.Extenstions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,7 @@ builder.Services.AddCors(opts =>
 
 builder.Services.AddDataAccessLayer(builder.Configuration);
 builder.Services.AddBusinessLogicLayer(builder.Configuration);
+builder.Services.AddHttpClients(builder.Configuration);
 
 builder.Services.AddFluentValidationAutoValidation();
 

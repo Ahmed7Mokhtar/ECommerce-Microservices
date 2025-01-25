@@ -18,4 +18,11 @@ public interface IUsersRepository
     /// <param name="password"></param>
     /// <returns>AppUser?</returns>
     Task<AppUser?> Get(string email, string password);
+
+    /// <summary>
+    /// Get user by id
+    /// </summary>
+    /// <param name="id">id of the user</param>
+    /// <returns>Object of type AppUser?</returns>
+    Task<AppUser?> GetById(Guid id);
 }

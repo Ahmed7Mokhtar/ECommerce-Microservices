@@ -19,4 +19,11 @@ public interface IUsersService
     /// <param name="registerDTO"></param>
     /// <returns>AuthResponseDTO?</returns>
     Task<AuthResponseDTO?> Register(RegisterDTO registerDTO);
+
+    /// <summary>
+    /// Get user by id
+    /// </summary>
+    /// <param name="id">id of user</param>
+    /// <returns>Object of type UserDTO?</returns>
+    Task<UserDTO?> GetById(Guid id);
 }

@@ -32,4 +32,9 @@ internal class UsersService : IUsersService
         var addedUser = await _usersRepository.Add(newUser);
         return addedUser is not null ? _mapper.Map<AuthResponseDTO>(addedUser) with { Success = true, Token = "Token" } : null;
     }
+
+    public async Task<UserDTO?> GetById(Guid id)
+    {
+        return _mapper.Map<UserDTO?>(await _usersRepository.GetById(id));
+    }
 }

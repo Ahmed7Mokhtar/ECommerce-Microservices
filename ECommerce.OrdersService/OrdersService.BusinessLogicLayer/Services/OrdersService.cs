@@ -1,12 +1,10 @@
 ﻿using AutoMapper;
-using FluentValidation;
 using MongoDB.Driver;
 using OrdersService.BusinessLogicLayer.DTOs;
+using OrdersService.BusinessLogicLayer.HttpClients;
 using OrdersService.BusinessLogicLayer.ServiceContracts;
-using OrdersService.BusinessLogicLayer.Validators;
 using OrdersService.DataAccessLayer.Entities;
 using OrdersService.DataAccessLayer.RepositoryContracts;
-using System;
 
 namespace OrdersService.BusinessLogicLayer.Services
 {
@@ -14,61 +12,76 @@ namespace OrdersService.BusinessLogicLayer.Services
     {
         private readonly IOrdersRepository _ordersRepository;
         private readonly IMapper _mapper;
-        private readonly IValidator<AddOrderDTO> _addOrderValidator;
-        private readonly IValidator<AddOrderItemDTO> _addOrderItemValidator;
-        private readonly IValidator<UpdateOrderDTO> _updateOrderValidator;
-        private readonly IValidator<UpdateOrderItemDTO> _updateOrderItemValidator;
         private readonly IValidationService _validationService;
+        private readonly UsersMicroserviceClient _usersMicroserviceClient;
+        private readonly ProductsMicroserviceClient _productsMicroserviceClient;
 
-        public OrdersService(IOrdersRepository ordersRepository, IMapper mapper,
-            //IValidator<AddOrderDTO> addOrderValidator, IValidator<AddOrderItemDTO> addOrderItemValidator,
-            //IValidator<UpdateOrderDTO> updateOrderValidator, IValidator<UpdateOrderItemDTO> updateOrderItemValidator, 
-            IValidationService validationService
-            )
+        public OrdersService(IOrdersRepository ordersRepository, IMapper mapper, IValidationService validationService, UsersMicroserviceClient usersMicroserviceClient, ProductsMicroserviceClient productsMicroserviceClient)
         {
             _ordersRepository = ordersRepository;
             _mapper = mapper;
-            //_addOrderValidator = addOrderValidator;
-            //_addOrderItemValidator = addOrderItemValidator;
-            //_updateOrderValidator = updateOrderValidator;
-            //_updateOrderItemValidator = updateOrderItemValidator;
             _validationService = validationService;
+            _usersMicroserviceClient = usersMicroserviceClient;
+            _productsMicroserviceClient = productsMicroserviceClient;
         }
 
         public async Task<List<OrderDTO>> GetAll()
         {
-            return _mapper.Map<List<OrderDTO>>(await _ordersRepository.GetAll());
+            var orders = _mapper.Map<List<OrderDTO>>(await _ordersRepository.GetAll());
+
+            foreach (var order in orders.Where(order => order != null))
+            {
+                foreach (var item in order.Items)
+                {
+                    var product = await _productsMicroserviceClient.GetById(item.ProductId);
+                    _mapper.Map<ProductDTO, OrderItemDTO>(product, item);
+                }
+
+                var user = await _usersMicroserviceClient.GetById(order.UserId);
+                _mapper.Map<UserDTO, OrderDTO>(user, order);
+            }
+
+            return orders;
         }
+
         public async Task<List<OrderDTO>> GetOrdersByCondition(FilterDefinition<Order> filter)
         {
-            return _mapper.Map<List<OrderDTO>>(await _ordersRepository.GetOrdersByCondition(filter));
+            var orders = _mapper.Map<List<OrderDTO>>(await _ordersRepository.GetOrdersByCondition(filter));
+
+            foreach (var order in orders.Where(order => order != null))
+            {
+                foreach (var item in order.Items)
+                {
+                    var product = await _productsMicroserviceClient.GetById(item.ProductId);
+                    _mapper.Map<ProductDTO, OrderItemDTO>(product, item);
+                }
+
+                var user = await _usersMicroserviceClient.GetById(order.UserId);
+                _mapper.Map<UserDTO, OrderDTO>(user, order);
+            }
+
+            return orders;
         }
 
         public async Task<OrderDTO?> GetOrderByCondition(FilterDefinition<Order> filter)
         {
-            return _mapper.Map<OrderDTO?>(await _ordersRepository.GetOrderByCondition(filter));
+            var order = _mapper.Map<OrderDTO?>(await _ordersRepository.GetOrderByCondition(filter));
+
+            foreach (var item in order?.Items)
+            {
+                var product = await _productsMicroserviceClient.GetById(item.ProductId);
+                _mapper.Map<ProductDTO, OrderItemDTO>(product, item);
+            }
+
+            var user = await _usersMicroserviceClient.GetById(order.UserId);
+            _mapper.Map<UserDTO, OrderDTO>(user, order);
+
+            return order;
         }
 
         public async Task<OrderDTO?> Add(AddOrderDTO order)
         {
             ArgumentNullException.ThrowIfNull(order);
-
-            //var result = await _addOrderValidator.ValidateAsync(order);
-            //if(!result.IsValid)
-            //{
-            //    string errors = string.Join(", ", result.Errors.Select(err => err.ErrorMessage));
-            //    throw new ArgumentException(errors);
-            //}
-
-            //foreach (var item in order.Items)
-            //{
-            //    result = await _addOrderItemValidator.ValidateAsync(item);
-            //    if(!result.IsValid)
-            //    {
-            //        string errors = string.Join(", ", result.Errors.Select(err => err.ErrorMessage));
-            //        throw new ArgumentException(errors);
-            //    }
-            //}
 
             await _validationService.ValidateAsync(order);
             foreach (var item in order.Items)
@@ -76,21 +89,30 @@ namespace OrdersService.BusinessLogicLayer.Services
                 await _validationService.ValidateAsync(item);
             }
 
-            //TODO: Check UserID exists in users microservice
+            UserDTO user = await _usersMicroserviceClient.GetById(order.UserId);
+
+            List<ProductDTO> loadedProducts = [];
+            foreach (var item in order.Items)
+            {
+                ProductDTO product = await _productsMicroserviceClient.GetById(item.ProductId);
+                loadedProducts.Add(product);
+            }
 
             var toBeAddedOrder = _mapper.Map<Order>(order);
 
-            //var totalBill = 0m;
-            //foreach (var item in toBeAddedOrder.OrderItems)
-            //{
-            //    item.TotalPrice = item.UnitPrice * item.Quantity;
-            //    totalBill += item.TotalPrice;
-            //}
-            //toBeAddedOrder.TotalBill = totalBill;
-
             var addedOrder = await _ordersRepository.Add(toBeAddedOrder);
 
-            return _mapper.Map<OrderDTO?>(addedOrder);
+            var orderResponse = _mapper.Map<OrderDTO?>(addedOrder);
+
+            foreach (var item in orderResponse?.Items)
+            {
+                var product = loadedProducts.FirstOrDefault(m => m.ProductId == item.ProductId);
+                _mapper.Map<ProductDTO, OrderItemDTO>(product!, item);
+            }
+
+            _mapper.Map<UserDTO, OrderDTO>(user, orderResponse);
+
+            return orderResponse;
         }
 
         public async Task<OrderDTO?> Update(UpdateOrderDTO order)
@@ -103,12 +125,29 @@ namespace OrdersService.BusinessLogicLayer.Services
                 await _validationService.ValidateAsync(item);
             }
 
-            //TODO: Check UserID exists in users microservice
+            UserDTO user = await _usersMicroserviceClient.GetById(order.UserId);
+
+            List<ProductDTO> loadedProducts = [];
+            foreach (var item in order.Items)
+            {
+                ProductDTO product = await _productsMicroserviceClient.GetById(item.ProductId);
+                loadedProducts.Add(product);
+            }
 
             var toBeUpdatedOrder = _mapper.Map<Order>(order);
 
             var updatedOrder = await _ordersRepository.Update(toBeUpdatedOrder);
-            return _mapper.Map<OrderDTO?>(updatedOrder);
+            var orderResponse = _mapper.Map<OrderDTO?>(updatedOrder);
+
+            foreach (var item in orderResponse?.Items)
+            {
+                var product = loadedProducts.FirstOrDefault(m => m.ProductId == item.ProductId);
+                _mapper.Map<ProductDTO, OrderItemDTO>(product!, item);
+            }
+
+            _mapper.Map<UserDTO, OrderDTO>(user, orderResponse);
+
+            return orderResponse;
         }
 
         public async Task<bool> Delete(Guid id)

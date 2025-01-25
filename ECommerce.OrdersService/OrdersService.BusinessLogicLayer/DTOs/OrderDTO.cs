@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace OrdersService.BusinessLogicLayer.DTOs
 {
-    public record OrderDTO(Guid OrderId, Guid UserId, decimal TotalBill, DateTime OrderDate, List<OrderItemDTO> Items)
+    public record OrderDTO(Guid OrderId, Guid UserId, string UserPersonName, string UserEmail, decimal TotalBill, DateTime OrderDate, List<OrderItemDTO> Items)
     {
-        public OrderDTO() : this(default, default, default, default, new List<OrderItemDTO>())
+        public OrderDTO() : this(default, default, "", "", default, default, new List<OrderItemDTO>())
         {
             
         }
