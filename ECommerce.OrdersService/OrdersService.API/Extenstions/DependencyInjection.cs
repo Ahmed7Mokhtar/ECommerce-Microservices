@@ -1,4 +1,6 @@
 ﻿using OrdersService.BusinessLogicLayer.HttpClients;
+using OrdersService.BusinessLogicLayer.Policies;
+using Polly;
 
 namespace OrdersService.API.Extenstions
 {
@@ -9,12 +11,14 @@ namespace OrdersService.API.Extenstions
             services.AddHttpClient<UsersMicroserviceClient>(client =>
             {
                 client.BaseAddress = new Uri($"http://{config["UsersMicroserviceName"]}:{config["UsersMicroservicePort"]}/");
-            });
+            })
+            .AddPolicyHandler(services.BuildServiceProvider().GetRequiredService<IUserserMicroservicePolicies>().GetCombinedPolicy());
 
             services.AddHttpClient<ProductsMicroserviceClient>(client =>
             {
-                client.BaseAddress = new Uri($"http://{config["ProductsMicroserviceName"]}:{config["ProductsMicroservicePort"]}/"); 
-            });
+                client.BaseAddress = new Uri($"http://{config["ProductsMicroserviceName"]}:{config["ProductsMicroservicePort"]}/");
+            })
+            .AddPolicyHandler(services.BuildServiceProvider().GetRequiredService<IProductsMicroservicePolicies>().GetCombinedPolicy());
 
             return services;
         }

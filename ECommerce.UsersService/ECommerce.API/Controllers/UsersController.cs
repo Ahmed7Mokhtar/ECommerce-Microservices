@@ -19,6 +19,9 @@ namespace ECommerce.API.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDTO?>> GetById(Guid id)
         {
+            await Task.Delay(10000);
+            //throw new NotImplementedException();
+
             if (id == Guid.Empty)
                 return BadRequest("Invalid user Id");
 
