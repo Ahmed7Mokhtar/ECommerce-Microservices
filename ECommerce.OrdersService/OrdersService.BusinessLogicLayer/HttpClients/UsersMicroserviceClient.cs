@@ -1,8 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 using OrdersService.BusinessLogicLayer.DTOs;
+using OrdersService.BusinessLogicLayer.ServiceContracts;
 using Polly.CircuitBreaker;
 using Polly.Timeout;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace OrdersService.BusinessLogicLayer.HttpClients
 {
@@ -10,20 +13,35 @@ namespace OrdersService.BusinessLogicLayer.HttpClients
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<UsersMicroserviceClient> _logger;
+        private readonly ICachingService _cacheService;
 
-        public UsersMicroserviceClient(HttpClient httpClient, ILogger<UsersMicroserviceClient> logger)
+        public UsersMicroserviceClient(HttpClient httpClient, ILogger<UsersMicroserviceClient> logger, ICachingService cacheService)
         {
             _httpClient = httpClient;
             _logger = logger;
+            _cacheService = cacheService;
         }
 
         public async Task<UserDTO> GetById(Guid userId)
         {
             try
             {
+                var cachedUser = await _cacheService.GetFromCacheAsync<UserDTO>($"user-{userId}");
+                if (cachedUser is not null)
+                    return cachedUser;
+
                 HttpResponseMessage response = await _httpClient.GetAsync($"api/Users/{userId}");
                 if (!response.IsSuccessStatusCode)
                 {
+                    // Comming from Fallback policy
+                    if (response.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
+                    {
+                        UserDTO? fallbackUser = await response.Content.ReadFromJsonAsync<UserDTO>();
+                        return fallbackUser is null
+                            ? throw new NotImplementedException("User fallback response is not implemented yet")
+                            : fallbackUser;
+                    }
+
                     return response.StatusCode switch
                     {
                         System.Net.HttpStatusCode.NotFound => throw new ArgumentNullException("Invalid user id"),
@@ -35,6 +53,12 @@ namespace OrdersService.BusinessLogicLayer.HttpClients
 
                 UserDTO? user = await response.Content.ReadFromJsonAsync<UserDTO>();
                 ArgumentNullException.ThrowIfNull(user);
+
+                // Add to cache
+                await _cacheService.SetCacheAsync($"user-{userId}", user, new DistributedCacheEntryOptions()
+                    .SetAbsoluteExpiration(DateTimeOffset.UtcNow.AddMinutes(5))
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(3))
+                );
 
                 return user;
             }

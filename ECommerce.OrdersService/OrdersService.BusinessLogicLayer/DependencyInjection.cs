@@ -25,6 +25,13 @@ namespace OrdersService.BusinessLogicLayer
             services.AddTransient<IProductsMicroservicePolicies, ProductsMicroservicePolicies>();
             services.AddTransient<IPolyPolicies, PolyPolicies>();
 
+            services.AddSingleton<ICachingService, CachingService>();
+
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = $"{config["REDIS_HOST"]}:{config["REDIS_PORT"]}";
+            });
+
             return services;
         }
     }

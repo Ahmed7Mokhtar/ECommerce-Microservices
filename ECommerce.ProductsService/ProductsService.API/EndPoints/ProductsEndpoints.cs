@@ -25,8 +25,8 @@ namespace ProductsService.API.EndPoints
 
             app.MapGet("/api/products/search/product-id/{productId:guid}", async (IProductsService productsService, Guid productId) =>
             {
-                await Task.Delay(1000);
-                throw new NotImplementedException();
+                //await Task.Delay(1000);
+                //throw new NotImplementedException();
 
                 var product = await productsService.GetByCondition(m => m.Id == productId);
                 if(product is null)

@@ -38,7 +38,7 @@ namespace OrdersService.BusinessLogicLayer.Policies
 
                 ProductDTO productDTO = new ProductDTO(ProductId: Guid.Empty, ProductName: "Temporarly unavailable", Category: "Temporarly unavailable", 0, 0);
 
-                return new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+                return new HttpResponseMessage(System.Net.HttpStatusCode.ServiceUnavailable)
                 {
                     Content = new StringContent(JsonSerializer.Serialize(productDTO), Encoding.UTF8, "application/json"),
                 };
