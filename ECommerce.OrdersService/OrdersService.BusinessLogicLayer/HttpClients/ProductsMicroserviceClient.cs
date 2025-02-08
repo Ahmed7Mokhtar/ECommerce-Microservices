@@ -30,7 +30,7 @@ namespace OrdersService.BusinessLogicLayer.HttpClients
                 if (cachedProduct is not null)
                     return cachedProduct;
 
-                HttpResponseMessage response = await _httpClient.GetAsync($"api/products/search/product-id/{productId}");
+                HttpResponseMessage response = await _httpClient.GetAsync($"gateway/products/search/product-id/{productId}");
                 if (!response.IsSuccessStatusCode)
                 {
                     // Comming from Fallback policy

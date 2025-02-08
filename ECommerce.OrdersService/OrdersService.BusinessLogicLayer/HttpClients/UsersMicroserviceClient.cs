@@ -30,7 +30,7 @@ namespace OrdersService.BusinessLogicLayer.HttpClients
                 if (cachedUser is not null)
                     return cachedUser;
 
-                HttpResponseMessage response = await _httpClient.GetAsync($"api/Users/{userId}");
+                HttpResponseMessage response = await _httpClient.GetAsync($"gateway/Users/{userId}");
                 if (!response.IsSuccessStatusCode)
                 {
                     // Comming from Fallback policy
