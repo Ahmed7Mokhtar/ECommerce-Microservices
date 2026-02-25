@@ -11,5 +11,6 @@ namespace OrdersService.BusinessLogicLayer.ServiceContracts
     {
         Task<T?> GetFromCacheAsync<T>(string cacheKey) where T : class;
         Task SetCacheAsync<T>(string cacheKey, T data, DistributedCacheEntryOptions? options = null);
+        Task DeleteCacheAsync(string cacheKey);
     }
 }

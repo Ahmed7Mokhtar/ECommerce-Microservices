@@ -1,0 +1,164 @@
+services:
+  mongodb-container:
+    image: ecommerce-mongodb:latest
+    build:
+      context: /mongodb
+      dockerfile: /Dockerfile
+    ports:
+      - "27017:27017"
+    networks:
+      - orders-mongodb-network
+
+  mysql-container:
+    image: ecommerce-mysql:latest
+    build:
+      context: /mysql
+      dockerfile: /Dockerfile
+    ports:
+      - "3306:3306"
+    networks:
+      - products-mysql-network
+
+  postgres-container:
+    image: ecommerce-postgres:latest
+    build:
+      context: /postgres
+      dockerfile: /Dockerfile
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=eCommerceUsers
+    ports:
+      - "5432:5432"
+    networks:
+      - users-postgres-network
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - ecommerce-network
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # management port 
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - ecommerce-network
+
+  apigateway:
+    image: apigateway:latest
+    build:
+      context: /ECommerce.OrdersService
+      dockerfile: /ApiGateway/Dockerfile
+    ports:
+      - "5000:8080"
+    networks:
+      - ecommerce-network
+    depends_on:
+      - orders-microservice
+      - products-microservice
+      - users-microservice
+
+  users-microservice:
+    image: users-microservice:latest
+    build:
+      context: /ECommerce.UsersService
+      dockerfile: /ECommerce.API/Dockerfile
+    environment:
+      - ASPNETCORE_HTTP_PORTS=9090
+      - ASPNETCORE_ENVIRONMENT=Development
+      - POSTGRES_HOST=postgres-container
+      - POSTGRES_PORT=5432
+      - POSTGRES_DATABASE=eCommerceUsers
+      - POSTGRES_USER=postgres    
+      - POSTGRES_PASSWORD=admin
+      - RabbitMQ_HostName=rabbitmq
+      - RabbitMQ_Port=5672
+      - RabbitMQ_UserName=guest
+      - RabbitMQ_Password=guest
+      - RabbitMQ_Users_Exchange=users.exchange
+    ports:
+      - "7878:9090"
+    networks:
+      - users-postgres-network
+      - ecommerce-network
+    depends_on:
+      - postgres-container
+
+
+  products-microservice:
+    image: products-microservice:latest
+    build:
+      context: /ECommerce.ProductsService
+      dockerfile: /ProductsService.API/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - MYSQL_HOST=mysql-container
+      - MYSQL_DATABASE=ecommerceproductsdatabase
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=admin
+      - MYSQL_PORT=3306         # - Container port not the host port
+      - RabbitMQ_HostName=rabbitmq
+      - RabbitMQ_Port=5672
+      - RabbitMQ_UserName=guest
+      - RabbitMQ_Password=guest
+      - RabbitMQ_Products_Exchange=product.exchange
+    ports:
+      - "6000:8080"
+    networks:
+      - products-mysql-network
+      - ecommerce-network
+    depends_on:
+      - mysql-container
+
+  orders-microservice:
+    image: orders-microservice:latest
+    build:
+      context: /ECommerce.OrdersService
+      dockerfile: /OrdersService.API/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - MONGODB_HOST=mongodb-container
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=OrdersDatabase
+      - UsersMicroserviceName=apigateway
+      - UsersMicroservicePort=8080
+      - ProductsMicroserviceName=apigateway
+      - ProductsMicroservicePort=8080
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RabbitMQ_HostName=rabbitmq
+      - RabbitMQ_UserName=guest
+      - RabbitMQ_Password=guest
+      - RabbitMQ_Port=5672
+      - RabbitMQ_Products_Exchange=product.exchange
+      - RabbitMQ_Users_Exchange=users.exchange
+    ports:
+      - "7000:8080"
+    networks:
+      - orders-mongodb-network
+      - ecommerce-network
+    depends_on:
+      - mongodb-container
+      - rabbitmq
+      - redis
+
+networks:
+  ecommerce-network:
+    driver: bridge
+
+  users-postgres-network:
+    driver: bridge
+
+  products-mysql-network:
+    driver: bridge
+
+  orders-mongodb-network:
+    driver: bridge

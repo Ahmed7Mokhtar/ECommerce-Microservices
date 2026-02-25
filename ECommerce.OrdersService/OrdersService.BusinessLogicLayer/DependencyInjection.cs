@@ -7,6 +7,7 @@ using OrdersService.BusinessLogicLayer.Services;
 using OrdersServiceClass = OrdersService.BusinessLogicLayer.Services.OrdersService;
 using OrdersService.BusinessLogicLayer.Validators;
 using OrdersService.BusinessLogicLayer.Policies;
+using OrdersService.BusinessLogicLayer.RabbitMQ;
 
 namespace OrdersService.BusinessLogicLayer
 {
@@ -31,6 +32,12 @@ namespace OrdersService.BusinessLogicLayer
             {
                 options.Configuration = $"{config["REDIS_HOST"]}:{config["REDIS_PORT"]}";
             });
+
+            services.AddTransient<IRabbitMQProductNameUpdateConsumer, RabbitMQProductNameUpdateConsumer>();
+            services.AddTransient<IRabbitMQProductDeletionConsumer, RabbitMQProductDeletionConsumer>();
+
+            services.AddHostedService<RabbitMQProductNameUpdateHostedService>();
+            services.AddHostedService<RabbitMQProductDeletionHostedService>();
 
             return services;
         }

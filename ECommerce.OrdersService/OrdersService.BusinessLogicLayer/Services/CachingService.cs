@@ -41,6 +41,12 @@ namespace OrdersService.BusinessLogicLayer.Services
             await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(data), options ?? GetDefaultCacheOptions());
         }
 
+        public async Task DeleteCacheAsync(string cacheKey)
+        {
+            _logger.LogInformation("Data is deleted from cache for key: {CacheKey}", cacheKey);
+            await _cache.RemoveAsync(cacheKey);
+        }
+
         private DistributedCacheEntryOptions GetDefaultCacheOptions() => 
             new DistributedCacheEntryOptions()
                 .SetAbsoluteExpiration(TimeSpan.FromSeconds(300))

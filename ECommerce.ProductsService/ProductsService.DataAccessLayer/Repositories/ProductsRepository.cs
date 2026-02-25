@@ -32,7 +32,7 @@ namespace ProductsService.DataAccessLayer.Repositories
 
         public async Task<Product?> GetByCondition(Expression<Func<Product, bool>> condition)
         {
-            return await _context.Products.FirstOrDefaultAsync(condition);
+            return await _context.Products.AsNoTracking().FirstOrDefaultAsync(condition);
         }
 
         public async Task<Product?> Add(Product product)

@@ -15,6 +15,11 @@ services:
       - ProductsMicroservicePort=8080
       - REDIS_HOST=redis    # redis container name
       - REDIS_PORT=6379 
+      - RabbitMQ_HostName=rabbitmq
+      - RabbitMQ_UserName=user
+      - RabbitMQ_Password=password
+      - RabbitMQ_Port=5672
+      - RabbitMQ_Products_Exchange=product.exchange
     ports:
       - "7000:8080"
     networks:
@@ -35,6 +40,9 @@ services:
 
   products-microservice:
     image: products-microservice:latest
+    build:
+      context: ../ECommerce.ProductsService
+      dockerfile: ProductsService.API/Dockerfile
     environment:
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_ENVIRONMENT=Development
@@ -43,6 +51,11 @@ services:
       - MYSQL_DATABASE=ecommerceproductsdatabase
       - MYSQL_PORT=3306         # - Container port not the host port
       - MYSQL_USER=root
+      - RabbitMQ_HostName=rabbitmq
+      - RabbitMQ_UserName=user
+      - RabbitMQ_Password=password
+      - RabbitMQ_Port=5672
+      - RabbitMQ_Products_Exchange=product.exchange
     ports:
       - "6000:8080"
     networks:
@@ -64,6 +77,9 @@ services:
 
   users-microservice:
     image: users-microservice:latest
+    build:
+      context: ../ECommerce.UsersService
+      dockerfile: ECommerce.API/Dockerfile
     environment:
       - ASPNETCORE_HTTP_PORTS=9090
       - ASPNETCORE_ENVIRONMENT=Development
@@ -110,6 +126,17 @@ services:
       dockerfile: ApiGateway/Dockerfile
     ports:
       - "4000:8080"
+    networks:
+      - ecommerce-network
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # management port 
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
     networks:
       - ecommerce-network
 

@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentValidation;
 using ProductsService.BusinessLogicLayer.Validators;
+using ProductsService.BusinessLogicLayer.RabbitMQ;
 
 namespace ProductsService.BusinessLogicLayer
 {
@@ -20,6 +21,8 @@ namespace ProductsService.BusinessLogicLayer
 
             services.AddAutoMapper(typeof(AddProductDTOToProductMappingProfile).Assembly);
             services.AddValidatorsFromAssemblyContaining<AddProductDTOValidator>();
+
+            services.AddTransient<IRabbitMQPublisher, RabbitMQPublisher>();
 
             return services;
         }

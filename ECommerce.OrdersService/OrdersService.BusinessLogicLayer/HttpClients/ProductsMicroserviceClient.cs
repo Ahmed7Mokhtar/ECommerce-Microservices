@@ -56,7 +56,6 @@ namespace OrdersService.BusinessLogicLayer.HttpClients
                 // Add to cache
                 await _cacheService.SetCacheAsync($"product-{productId}", product, new DistributedCacheEntryOptions()
                     .SetAbsoluteExpiration(TimeSpan.FromSeconds(300))
-                    .SetSlidingExpiration(TimeSpan.FromSeconds(100))
                 );
 
                 return product;
